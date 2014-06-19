@@ -1230,7 +1230,16 @@ class Reader
     end
   end
   def read_theme work, pos, len
+    # Theme (896h), Microsoft Office Excel 97-2007 Binary File Format (.xls) Specification Page 264 of 349
+    # Offset  Name            Size   Contents
+    # 4       rt              2      Record type; this matches the BIFF rt in the first two bytes of the record; =0896h
+    # 6       grbitFrt        2      FRT cell reference flag; =0 currently
+    # 8       (Reserved)      8      Currently not used, and set to 0
+    # 16      dwThemeVersion  8      default theme version; =0 if custom theme
+    # 24      rgb             var    beginning of serialized package bytes
     headers = work.unpack('vvQ<Q<')
+    # If the theme version is 0 then the document uses a custom theme which will be serialized to a byte stream containing the zip package with the theme contents
+    # Don't have time to implement this yet, so this is to warn me if support for this feature is really needed
     raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers.map { |v| v.to_s(16) }}" if headers[3] == 0
   end
   def read_note worksheet, work, pos, len
