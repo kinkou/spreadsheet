@@ -844,6 +844,8 @@ class Reader
         read_font work, pos, len
       when :palette
         read_palette work
+      when :xfext
+        read_xfext work
       end
       previous_op = op unless op == :continue
     end
@@ -1149,6 +1151,66 @@ class Reader
     fmt.pattern_fg_color_xf_index = xf_pattern & 0x007f
     fmt.pattern_bg_color = COLOR_CODES[(xf_pattern & 0x3f80) >> 7] || :pattern_bg
     @workbook.add_format fmt
+  end
+  def read_xfext work
+    # XFEXT: XF Extension (87Dh)
+    # Offset        Name  Size
+    #      4          rt     2 ￼Record type; this matches the BIFF rt in the first two bytes of the record; =087Dh
+    #      6    grbitFrt     2  FRT cell reference flag; =0 currently
+    #      8  (Reserved)     8  Currently not used, and set to 0
+    #     16     version     2  Record version; =0 currently – Office Excel 2007 will ignore this record on load if not 0.
+    #     18        ixfe     2  Index of to XF record this extension modifies
+    #     20  (Reserved)     2  Currently not used, and set to 0
+    #     22       cexts     2  Number of extension properties that follow
+    #     24         rgb   var  Array of extension properties.
+    xf_id, num = work.unpack('@14vxxv')
+    offset = 20
+    xf = @workbook.format(xf_id)
+
+    num.times do
+      # 0  extType  2  Indicates extension property type
+      # 2  cb       2  Length of this extension in bytes including header.
+      type, ext_len = work.unpack("@#{offset}vv")
+
+      case (type_key = XF_EXTENSION_TYPES[type])
+        when :rgb_fore_color # xfextRGBForeColor
+          # 4  rgbColor  4 ￼rgb color (alpha is ignored)
+          rgb = work.unpack("@#{offset + 4}N")
+          color = rgb_hex(rgb)
+          xf.extension[:rgb_fg_color] = color
+          #puts "adding xf_ext for xf #{xf_id}, xfextRGBForeColor #{color}, original #{rgb}"
+        when :fg_color, :text_color # xfextForeColor, xfextTextColor
+          # 4   xclrType    2 ￼ Color type
+          # 6   nTintShade  2   (signed) tint and shade value
+          # 8   xclrValue   4   Color value – value based on color type
+          # 10  (Reserved)  8   Reserved; not used
+          color_type, tint, color_value = work.unpack("@#{offset + 4}vs<V")
+
+          color = case XF_EXTENSION_COLOR_TYPES[color_type]
+                    when :auto
+                      'ffffff'
+                    when :indexed, :themed
+                      color_value
+                    when :rgb
+                      color_rgb_value = work.unpack("@#{offset + 8}N").first
+                      rgb_hex(color_rgb_value)
+                    else
+                      raise 'not_implemented'
+                  end
+
+          # This value is used to represent how the color should be tinted or shaded.
+          # This value is ranges from (-1.0 to 1.0). Positive values make the color value lighter,
+          # negative values make the color value darker. A 0.0 value means do not tint/shade the color.
+          tint = tint.to_f * (1.0 / (tint < 0 ? 32768.0 : 32767.0)) # Scaling signed short to range of -1..1
+
+          xf.extension[type_key] = { color_type: color_type, tint: tint, color: color }
+          #puts "adding fx_ext for #{xf_id} type :#{type_key}, color type :#{color_type}, color ##{color} tint #{tint}"
+        else
+          nil # not implemented yet
+      end
+
+      offset += ext_len
+    end
   end
   def read_palette work
     # Offset  Size  Contents
