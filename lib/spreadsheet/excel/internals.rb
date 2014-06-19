@@ -385,6 +385,8 @@ module Internals
     :obj          => 0x005d,
     :drawing      => 0x00EC,
     :txo          => 0x01B6,
+    :xfext        => 0x087D, # Microsoft Office Excel 97-2007 Binary File Format (.xls) Specification Page 289
+    :theme        => 0x0896, # Microsoft Office Excel 97-2007 Binary File Format (.xls) Specification Page 264
   }
 =begin ## unknown opcodes
 0x00bf, 0x00c0, 0x00c1, 0x00e1, 0x00e2, 0x00eb, 0x01af, 0x01bc
