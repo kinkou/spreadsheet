@@ -85,11 +85,13 @@ module Spreadsheet
          :justify     => :vjustify,
          :middle      => [:vcenter, :vcentre, :center, :centre]
     attr_accessor :font, :number_format, :name, :pattern, :used_merge
+    attr_accessor :pattern_fg_color_xf_index, :font_index
     ##
     # Text rotation
     attr_reader :rotation
     def initialize opts={}
       @font             = Font.new client("Arial", 'UTF-8'), :family => :swiss
+      @font_index       = nil
       @number_format    = client 'GENERAL', 'UTF-8'
       @rotation         = 0
       @pattern          = 0
@@ -99,6 +101,7 @@ module Spreadsheet
       @right_color      = :black
       @diagonal_color   = :black
       @pattern_fg_color = :border
+      @pattern_fg_color_xf_index = nil
       @pattern_bg_color = :pattern_bg
       @regexes = {
         :date         => Regexp.new(client("[YMD]", 'UTF-8')),

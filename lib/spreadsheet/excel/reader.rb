@@ -1114,7 +1114,9 @@ class Reader
     fmt.number_format = @formats[numfmt]
     ## this appears to be undocumented: the first 4 fonts seem to be accessed
     #  with a 0-based index, but all subsequent font indices are 1-based.
-    fmt.font = @workbook.font(font_idx > 3 ? font_idx - 1 : font_idx)
+    adjusted_font_idx = font_idx > 3 ? font_idx - 1 : font_idx
+    fmt.font = @workbook.font(adjusted_font_idx)
+    fmt.font_index = adjusted_font_idx
     fmt.horizontal_align = NGILA_H_FX[xf_align & 0x07]
     fmt.text_wrap = xf_align & 0x08 > 0
     fmt.vertical_align = NGILA_V_FX[xf_align & 0x70]
@@ -1144,6 +1146,7 @@ class Reader
     	fmt.pattern        = (xf_brdcolors & 0xfc000000) >> 26
 		end
     fmt.pattern_fg_color = COLOR_CODES[xf_pattern & 0x007f] || :border
+    fmt.pattern_fg_color_xf_index = xf_pattern & 0x007f
     fmt.pattern_bg_color = COLOR_CODES[(xf_pattern & 0x3f80) >> 7] || :pattern_bg
     @workbook.add_format fmt
   end
