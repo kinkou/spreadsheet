@@ -406,6 +406,12 @@ module Internals
       14 => :font_scheme,         # Set cell font to use specified font scheme
       15 => :indent,              # Set cell indentation level ( indents > 15)
   }
+  XF_EXTENSION_COLOR_TYPES = {
+      0 => :auto,    # Automatic foreground/background colors
+      1 => :indexed, # xclrValue = BIFF8 indexed palette color (icv)
+      2 => :rgb,     # xclrValue = RGB color
+      3 => :themed,  # xclrValue = Theme color index
+  }
 =begin ## unknown opcodes
 0x00bf, 0x00c0, 0x00c1, 0x00e1, 0x00e2, 0x00eb, 0x01af, 0x01bc
 =end
