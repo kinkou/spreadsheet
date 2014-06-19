@@ -1238,9 +1238,12 @@ class Reader
     # 16      dwThemeVersion  8      default theme version; =0 if custom theme
     # 24      rgb             var    beginning of serialized package bytes
     headers = work.unpack('vvQ<Q<')
+    headers1 = work.unpack('vvQ>Q>')
+    puts "headers #{headers}"
+    puts "headers1 #{headers1}"
     # If the theme version is 0 then the document uses a custom theme which will be serialized to a byte stream containing the zip package with the theme contents
     # Don't have time to implement this yet, so this is to warn me if support for this feature is really needed
-    raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers.map { |v| v.to_s(16) }}" if headers[3] == 0
+    raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers}" if headers[3] == 0
   end
   def read_note worksheet, work, pos, len
     #puts "\nDEBUG: found a note record in read_worksheet\n"
