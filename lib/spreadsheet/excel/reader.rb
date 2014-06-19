@@ -1239,10 +1239,12 @@ class Reader
     # 24      rgb             var    beginning of serialized package bytes
     headers = work.unpack('vvQ<Q<')
     headers1 = work.unpack('vvQ>Q>')
+    headers2 = work.unpack('C12V')
+    headers3 = work.unpack('C12<V')
     puts "headers #{headers}"
     puts "headers1 #{headers1}"
-    puts "headers #{headers.map{|h| h.to_s(16)}}"
-    puts "headers1 #{headers1.map{|h| h.to_s(16)}}"
+    puts "headers2 #{headers2}"
+    puts "headers3 #{headers3}"
     # If the theme version is 0 then the document uses a custom theme which will be serialized to a byte stream containing the zip package with the theme contents
     # Don't have time to implement this yet, so this is to warn me if support for this feature is really needed
     raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers}" if headers[3] == 0
