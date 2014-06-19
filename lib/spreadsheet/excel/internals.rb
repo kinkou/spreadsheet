@@ -480,6 +480,14 @@ module Internals
   def opcode key
     OPCODES[key]
   end
+  def rgb_hex rgb
+    # convert to hex and cut off unused last byte (2.5.4 RGB Colours)
+    color = rgb.to_s(16).split(//)
+    (8 - color.size).times { color = color.unshift('0') } # '80FF' -> '000080FF'
+    color = color.join[0..5]
+    #puts "fixed #{rgb.to_s(16)} to #{color}"
+    color
+  end
 end
   end
 end

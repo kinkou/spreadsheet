@@ -842,6 +842,8 @@ class Reader
         read_format work, pos, len
       when :font       # ●● FONT ➜ 6.43
         read_font work, pos, len
+      when :palette
+        read_palette work
       end
       previous_op = op unless op == :continue
     end
@@ -1144,6 +1146,21 @@ class Reader
     fmt.pattern_fg_color = COLOR_CODES[xf_pattern & 0x007f] || :border
     fmt.pattern_bg_color = COLOR_CODES[(xf_pattern & 0x3f80) >> 7] || :pattern_bg
     @workbook.add_format fmt
+  end
+  def read_palette work
+    # Offset  Size  Contents
+    #      0     2  Number of following colours (nm). Contains 16 in BIFF3-BIFF4 and 56 in BIFF5-BIFF8.
+    #      2  4∙nm  List of nm RGB colours (➜ 2.5.4)
+    palette_length = work.unpack('v1').first
+    palette_bin    = work.unpack("xxN#{palette_length}") # Excel uses big-endian for colors
+
+    result = palette_bin.map { |color_bin| rgb_hex(color_bin) }
+
+    result.each_with_index do |color, idx|
+      idx = idx + 8 # built-in color indexes start at 0x08
+      #puts "adding color #{color} at idx #{idx}"
+      @workbook.palette[idx] = color
+    end
   end
   def read_note worksheet, work, pos, len
     #puts "\nDEBUG: found a note record in read_worksheet\n"
