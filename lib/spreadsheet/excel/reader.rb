@@ -1188,7 +1188,7 @@ class Reader
           # 10  (Reserved)  8   Reserved; not used
           color_type, tint, color_value = work.unpack("@#{offset + 4}vs<V")
 
-          color = case XF_EXTENSION_COLOR_TYPES[color_type]
+          color = case (color_type_sym = XF_EXTENSION_COLOR_TYPES[color_type])
                     when :auto
                       'ffffff'
                     when :indexed, :themed
@@ -1205,7 +1205,7 @@ class Reader
           # negative values make the color value darker. A 0.0 value means do not tint/shade the color.
           tint = tint.to_f * (1.0 / (tint < 0 ? 32768.0 : 32767.0)) # Scaling signed short to range of -1..1
 
-          xf.extension[type_key] = { color_type: color_type, tint: tint, color: color }
+          xf.extension[type_key] = { color_type: color_type_sym, tint: tint, color: color }
           #puts "adding fx_ext for #{xf_id} type :#{type_key}, color type :#{color_type}, color ##{color} tint #{tint}"
         else
           nil # not implemented yet
