@@ -846,6 +846,8 @@ class Reader
         read_palette work
       when :xfext
         read_xfext work
+      when :theme
+        read_theme work, pos, len
       end
       previous_op = op unless op == :continue
     end
@@ -1226,6 +1228,10 @@ class Reader
       #puts "adding color #{color} at idx #{idx}"
       @workbook.palette[idx] = color
     end
+  end
+  def read_theme work, pos, len
+    headers = work.unpack('vvQ<Q<')
+    raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers.map { |v| v.to_s(16) }}" if headers[3] == 0
   end
   def read_note worksheet, work, pos, len
     #puts "\nDEBUG: found a note record in read_worksheet\n"
