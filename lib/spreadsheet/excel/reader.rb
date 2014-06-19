@@ -1241,6 +1241,8 @@ class Reader
     headers1 = work.unpack('vvQ>Q>')
     puts "headers #{headers}"
     puts "headers1 #{headers1}"
+    puts "headers #{headers.map{|h| h.to_s(16)}}"
+    puts "headers1 #{headers1.map{|h| h.to_s(16)}}"
     # If the theme version is 0 then the document uses a custom theme which will be serialized to a byte stream containing the zip package with the theme contents
     # Don't have time to implement this yet, so this is to warn me if support for this feature is really needed
     raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers}" if headers[3] == 0
