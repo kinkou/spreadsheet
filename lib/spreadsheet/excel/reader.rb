@@ -1175,7 +1175,7 @@ class Reader
       type, ext_len = work.unpack("@#{offset}vv")
 
       case (type_key = XF_EXTENSION_TYPES[type])
-        when :rgb_fore_color # xfextRGBForeColor
+        when :rgb_fg_color # xfextRGBForeColor
           # 4  rgbColor  4 ￼rgb color (alpha is ignored)
           rgb = work.unpack("@#{offset + 4}N")
           color = rgb_hex(rgb)
