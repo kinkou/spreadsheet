@@ -10,7 +10,8 @@ require 'spreadsheet/excel/sst_entry'
 require 'spreadsheet/excel/worksheet'
 
 require 'stringio'
-require 'zipruby'
+require 'zip'
+require 'nokogiri'
 
 module Spreadsheet
   module Excel
@@ -1258,10 +1259,17 @@ class Reader
   def finish_theme
     File.open('/Users/Marti/Sites/mediacatalog/feeds/theme.zip', 'wb') { |o| o.write @theme }
     buffer = StringIO.new(@theme)
-    Zip::Archive.open_buffer(buffer) do |ar|
-      ar.each do |f|
-        puts f.name
-      end
+    zip = Zip::InputStream.new(buffer)
+
+    while (e = zip.get_next_entry).present?
+      xml = e.get_input_stream.read if e.name == 'theme/theme/theme1.xml'
+    end
+
+    Nokogiri::XML(xml).xpath('.//a:clrScheme/*').each do |e|
+      key = "a_#{e.name}".to_sym
+      vals = { val: e.child.attr('val') }
+      vals[:lastClr] = e.child.attr('lastClr') if e.child.attr('lastClr').present?
+      @workbook.theme[key] = vals
     end
   end
   def read_note worksheet, work, pos, len

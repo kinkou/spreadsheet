@@ -19,6 +19,8 @@ spec = Gem::Specification.new do |spec|
 
    spec.add_dependency "ruby-ole"
    spec.add_development_dependency "hoe"
+   spec.add_dependency 'rubyzip', '>= 1.0.0'
+   spec.add_dependency 'nokogiri', '>= 1.4.4'
 
    spec.homepage    = 'https://github.com/zdavatz/spreadsheet/'
 end
