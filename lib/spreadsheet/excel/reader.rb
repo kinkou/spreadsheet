@@ -1131,7 +1131,6 @@ class Reader
     #  with a 0-based index, but all subsequent font indices are 1-based.
     adjusted_font_idx = font_idx > 3 ? font_idx - 1 : font_idx
     fmt.font = @workbook.font(adjusted_font_idx)
-    fmt.font_index = adjusted_font_idx
     fmt.horizontal_align = NGILA_H_FX[xf_align & 0x07]
     fmt.text_wrap = xf_align & 0x08 > 0
     fmt.vertical_align = NGILA_V_FX[xf_align & 0x70]
