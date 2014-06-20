@@ -320,6 +320,7 @@ class Reader
     font.outline    = opts & 0x0010
     font.shadow     = opts & 0x0020
     font.color      = COLOR_CODES[color] || :text
+    font.color_index = color
     font.escapement = ESCAPEMENT_TYPES[escapement]
     font.underline  = UNDERLINE_TYPES[underline]
     font.family     = FONT_FAMILIES[family]
