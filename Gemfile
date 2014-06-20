@@ -1,5 +1,6 @@
 source "https://rubygems.org"
 gem 'ruby-ole'
+gem 'zipruby'
 
 if RUBY_VERSION.to_f > 2.0
   gem 'test-unit'

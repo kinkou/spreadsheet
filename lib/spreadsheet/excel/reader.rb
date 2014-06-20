@@ -9,6 +9,9 @@ require 'spreadsheet/excel/internals'
 require 'spreadsheet/excel/sst_entry'
 require 'spreadsheet/excel/worksheet'
 
+require 'stringio'
+require 'zipruby'
+
 module Spreadsheet
   module Excel
 ##
@@ -113,6 +116,7 @@ class Reader
     @opts[:memoization]
   end
   def postread_workbook
+    finish_theme
     sheets = @workbook.worksheets
     sheets.each_with_index do |sheet, idx|
       offset = sheet.offset
@@ -847,9 +851,14 @@ class Reader
       when :xfext
         read_xfext work
       when :theme
-        read_theme work, pos, len
+        read_theme work
+      when :continuefrt12
+        case previous_op
+          when :theme
+            continue_theme work
+        end
       end
-      previous_op = op unless op == :continue
+      previous_op = op unless [:continue, :continuefrt12].include?(op)
     end
   end
   def read_worksheet worksheet, offset
@@ -1229,7 +1238,7 @@ class Reader
       @workbook.palette[idx] = color
     end
   end
-  def read_theme work, pos, len
+  def read_theme work
     # Theme (896h), Microsoft Office Excel 97-2007 Binary File Format (.xls) Specification Page 264 of 349
     # Offset  Name            Size   Contents
     # 4       rt              2      Record type; this matches the BIFF rt in the first two bytes of the record; =0896h
@@ -1237,11 +1246,23 @@ class Reader
     # 8       (Reserved)      8      Currently not used, and set to 0
     # 16      dwThemeVersion  8      default theme version; =0 if custom theme
     # 24      rgb             var    beginning of serialized package bytes
-    headers = work.unpack('v v x8 V')
-    puts "headers #{headers}"
+
     # If the theme version is 0 then the document uses a custom theme which will be serialized to a byte stream containing the zip package with the theme contents
     # Don't have time to implement this yet, so this is to warn me if support for this feature is really needed
-    raise "custom style attachment detected, pos #{pos} len #{len} headers #{headers}" if headers[3] == 0
+    return unless work.unpack('v v x8 V')[2] == 0
+    @theme = work.byteslice(16..-1)
+  end
+  def continue_theme work
+    @theme << work.byteslice(12..-1)
+  end
+  def finish_theme
+    File.open('/Users/Marti/Sites/mediacatalog/feeds/theme.zip', 'wb') { |o| o.write @theme }
+    buffer = StringIO.new(@theme)
+    Zip::Archive.open_buffer(buffer) do |ar|
+      ar.each do |f|
+        puts f.name
+      end
+    end
   end
   def read_note worksheet, work, pos, len
     #puts "\nDEBUG: found a note record in read_worksheet\n"

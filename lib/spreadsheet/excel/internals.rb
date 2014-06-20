@@ -387,6 +387,7 @@ module Internals
     :txo          => 0x01B6,
     :xfext        => 0x087D, # Microsoft Office Excel 97-2007 Binary File Format (.xls) Specification Page 289
     :theme        => 0x0896, # Microsoft Office Excel 97-2007 Binary File Format (.xls) Specification Page 264
+    :continuefrt12 => 0x087F, #
   }
   XF_EXTENSION_TYPES = {
       0  => :rgb_fg_color,        # Sets cell interior forecolor to RGB
