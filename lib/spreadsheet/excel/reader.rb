@@ -117,7 +117,7 @@ class Reader
     @opts[:memoization]
   end
   def postread_workbook
-    finish_theme
+    finish_theme if @theme
     sheets = @workbook.worksheets
     sheets.each_with_index do |sheet, idx|
       offset = sheet.offset
@@ -1259,14 +1259,14 @@ class Reader
   def finish_theme
     zip = Zip::InputStream.new StringIO.new(@theme)
 
-    while (e = zip.get_next_entry).present?
+    while (e = zip.get_next_entry)
       xml = e.get_input_stream.read if e.name == 'theme/theme/theme1.xml'
     end
 
     Nokogiri::XML(xml).xpath('.//a:clrScheme/*').each do |e|
       key = "a_#{e.name}".to_sym
       vals = { val: e.child.attr('val') }
-      vals[:lastClr] = e.child.attr('lastClr') if e.child.attr('lastClr').present?
+      vals[:lastClr] = e.child.attr('lastClr') if e.child.attr('lastClr')
       @workbook.theme[key] = vals
     end
 
