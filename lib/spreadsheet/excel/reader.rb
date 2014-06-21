@@ -1257,9 +1257,7 @@ class Reader
     @theme << work.byteslice(12..-1)
   end
   def finish_theme
-    File.open('/Users/Marti/Sites/mediacatalog/feeds/theme.zip', 'wb') { |o| o.write @theme }
-    buffer = StringIO.new(@theme)
-    zip = Zip::InputStream.new(buffer)
+    zip = Zip::InputStream.new StringIO.new(@theme)
 
     while (e = zip.get_next_entry).present?
       xml = e.get_input_stream.read if e.name == 'theme/theme/theme1.xml'
@@ -1271,6 +1269,8 @@ class Reader
       vals[:lastClr] = e.child.attr('lastClr') if e.child.attr('lastClr').present?
       @workbook.theme[key] = vals
     end
+
+    @theme = nil
   end
   def read_note worksheet, work, pos, len
     #puts "\nDEBUG: found a note record in read_worksheet\n"
