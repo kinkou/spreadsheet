@@ -1250,14 +1250,14 @@ class Reader
 
     # If the theme version is 0 then the document uses a custom theme which will be serialized to a byte stream containing the zip package with the theme contents
     # Don't have time to implement this yet, so this is to warn me if support for this feature is really needed
-    return unless work.unpack('v v x8 V')[2] == 0
+    return unless work.unpack('vvx8V')[2] == 0
     @theme = work.byteslice(16..-1)
   end
   def continue_theme work
     @theme << work.byteslice(12..-1)
   end
   def finish_theme
-    zip = Zip::InputStream.new StringIO.new(@theme)
+    zip = Zip::InputStream.new(StringIO.new(@theme))
 
     while (e = zip.get_next_entry)
       xml = e.get_input_stream.read if e.name == 'theme/theme/theme1.xml'
