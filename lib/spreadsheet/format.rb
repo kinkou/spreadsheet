@@ -84,8 +84,8 @@ module Spreadsheet
          :distributed => [:vdistributed, :vequal_space, :equal_space],
          :justify     => :vjustify,
          :middle      => [:vcenter, :vcentre, :center, :centre]
-    attr_accessor :font, :number_format, :name, :pattern, :used_merge
-    attr_accessor :pattern_fg_color_xf_index
+    attr_accessor :font, :number_format, :name, :pattern, :pattern_name, :used_merge
+    attr_accessor :pattern_fg_color_idx, :pattern_bg_color_idx
     attr_accessor :extension
     ##
     # Text rotation
@@ -95,14 +95,16 @@ module Spreadsheet
       @number_format    = client 'GENERAL', 'UTF-8'
       @rotation         = 0
       @pattern          = 0
+      @pattern_name     = nil
       @bottom_color     = :black
       @top_color        = :black
       @left_color       = :black
       @right_color      = :black
       @diagonal_color   = :black
       @pattern_fg_color = :border
-      @pattern_fg_color_xf_index = nil
+      @pattern_fg_color_idx = nil
       @pattern_bg_color = :pattern_bg
+      @pattern_bg_color_idx = nil
       @extension = {} # XFEXT: XF Extension (87Dh)
       @regexes = {
         :date         => Regexp.new(client("[YMD]", 'UTF-8')),

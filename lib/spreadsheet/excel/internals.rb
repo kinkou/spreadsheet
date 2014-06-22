@@ -413,6 +413,27 @@ module Internals
       2 => :rgb,     # xclrValue = RGB color
       3 => :themed,  # xclrValue = Theme color index
   }
+  XF_PATTERN_TYPES = {
+      0x00 => nil,
+      0x01 => 'solid',
+      0x02 => 'mediumGray',
+      0x03 => 'darkGray',
+      0x04 => 'lightGray',
+      0x05 => 'darkHorizontal',
+      0x06 => 'darkVertical',
+      0x07 => 'darkDown',
+      0x08 => 'darkUp',
+      0x09 => 'darkGrid',
+      0x0A => 'darkTrellis',
+      0x0B => 'lightHorizontal',
+      0x0C => 'lightVertical',
+      0x0D => 'lightDown',
+      0x0E => 'lightUp',
+      0x0F => 'lightGrid',
+      0x10 => 'lightTrellis',
+      0x11 => 'gray125',
+      0x12 => 'gray0625',
+  }
 =begin ## unknown opcodes
 0x00bf, 0x00c0, 0x00c1, 0x00e1, 0x00e2, 0x00eb, 0x01af, 0x01bc
 =end

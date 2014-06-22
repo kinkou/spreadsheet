@@ -1157,11 +1157,15 @@ class Reader
     	fmt.bottom_color   = COLOR_CODES[(xf_brdcolors & 0x00003f80) >> 7] || :black
     	fmt.diagonal_color = COLOR_CODES[(xf_brdcolors & 0x001fc000) >> 14] || :black
     	#fmt.diagonal_style = COLOR_CODES[xf_brdcolors & 0x01e00000]
-    	fmt.pattern        = (xf_brdcolors & 0xfc000000) >> 26
+    	fmt.pattern        = ptrn_idx = (xf_brdcolors & 0xfc000000) >> 26
+    	fmt.pattern_name   = XF_PATTERN_TYPES[ptrn_idx]
 		end
-    fmt.pattern_fg_color = COLOR_CODES[xf_pattern & 0x007f] || :border
-    fmt.pattern_fg_color_xf_index = xf_pattern & 0x007f
-    fmt.pattern_bg_color = COLOR_CODES[(xf_pattern & 0x3f80) >> 7] || :pattern_bg
+    fmt.pattern_fg_color_idx = fg_idx = xf_pattern & 0x007f
+    fmt.pattern_fg_color = COLOR_CODES[fg_idx] || :border
+
+    fmt.pattern_bg_color_idx = bg_idx = (xf_pattern & 0x3f80) >> 7
+    fmt.pattern_bg_color = COLOR_CODES[bg_idx] || :pattern_bg
+
     @workbook.add_format fmt
   end
   def read_xfext work
@@ -1185,13 +1189,13 @@ class Reader
       type, ext_len = work.unpack("@#{offset}vv")
 
       case (type_key = XF_EXTENSION_TYPES[type])
-        when :rgb_fg_color # xfextRGBForeColor
+        when :rgb_fg_color, :rgb_bg_color
           # 4  rgbColor  4 ￼rgb color (alpha is ignored)
           rgb = work.unpack("@#{offset + 4}N")
           color = rgb_hex(rgb)
-          xf.extension[:rgb_fg_color] = color
+          xf.extension[type_key] = color
           #puts "adding xf_ext for xf #{xf_id}, xfextRGBForeColor #{color}, original #{rgb}"
-        when :fg_color, :text_color # xfextForeColor, xfextTextColor
+        when :fg_color, :bg_color, :text_color # xfextForeColor, xfextTextColor
           # 4   xclrType    2 ￼ Color type
           # 6   nTintShade  2   (signed) tint and shade value
           # 8   xclrValue   4   Color value – value based on color type
