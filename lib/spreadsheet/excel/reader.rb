@@ -1183,6 +1183,11 @@ class Reader
     offset = 20
     xf = @workbook.format(xf_id)
 
+    unless xf
+      puts "Extension reader could not find corresponding XF with id #{xf_id}"
+      return
+    end
+
     num.times do
       # 0  extType  2  Indicates extension property type
       # 2  cb       2  Length of this extension in bytes including header.
