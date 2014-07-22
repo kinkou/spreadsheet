@@ -1,8 +1,6 @@
-require File.join(File.dirname(__FILE__), 'lib', 'spreadsheet')
-
 spec = Gem::Specification.new do |s|
    s.name        = "spreadsheet"
-   s.version     =  Spreadsheet::VERSION
+   s.version     = '0.9.7'
    s.summary     = "The Spreadsheet Library is designed to read and write Spreadsheet Documents"
    s.description = "As of version 0.6.0, only Microsoft Excel compatible spreadsheets are supported"
    s.author      = "Masaomi Hatakeyama, Zeno R.R. Davatz"
