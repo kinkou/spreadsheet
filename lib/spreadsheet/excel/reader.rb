@@ -1200,32 +1200,67 @@ class Reader
           color = rgb_hex(rgb)
           xf.extension[type_key] = color
           #puts "adding xf_ext for xf #{xf_id}, xfextRGBForeColor #{color}, original #{rgb}"
+
         when :fg_color, :bg_color, :text_color # xfextForeColor, xfextTextColor
           # 4   xclrType    2 ￼ Color type
           # 6   nTintShade  2   (signed) tint and shade value
           # 8   xclrValue   4   Color value – value based on color type
           # 10  (Reserved)  8   Reserved; not used
-          color_type, tint, color_value = work.unpack("@#{offset + 4}vs<V")
+          color_type, tint_raw, color_value = work.unpack("@#{offset + 4}vs<V")
 
-          color = case (color_type_sym = XF_EXTENSION_COLOR_TYPES[color_type])
-                    when :auto
-                      'ffffff'
-                    when :indexed, :themed
-                      color_value
-                    when :rgb
-                      color_rgb_value = work.unpack("@#{offset + 8}N").first
-                      rgb_hex(color_rgb_value)
-                    else
-                      raise 'not_implemented'
-                  end
+          color_type_sym = XF_EXTENSION_COLOR_TYPES[color_type]
+          color_value = work.unpack("@#{offset + 8}N").first if color_type_sym == :rgb
+          color = detect_color(color_value, color_type_sym)
 
-          # This value is used to represent how the color should be tinted or shaded.
-          # This value is ranges from (-1.0 to 1.0). Positive values make the color value lighter,
-          # negative values make the color value darker. A 0.0 value means do not tint/shade the color.
-          tint = tint.to_f * (1.0 / (tint < 0 ? 32768.0 : 32767.0)) # Scaling signed short to range of -1..1
-
-          xf.extension[type_key] = { color_type: color_type_sym, tint: tint, color: color }
+          xf.extension[type_key] = { color_type: color_type_sym, tint: calculate_tint(tint_raw), color: color }
           #puts "adding fx_ext for #{xf_id} type :#{type_key}, color type :#{color_type}, color ##{color} tint #{tint}"
+
+        when :gradient_tint
+          # 4   type             4  Gradient type. Two gradient types are currently supported – linear (0) and rectangular (1)
+          # 8   numDegree        8  Gradient angle. Used for linear gradients to determine the angle at which the gradient strokes will be drawn (vertical, horizontal, or diagonal)
+          # 16  numFillToLeft    8  Left coordinate. Used for rectangular gradients to determine the coordinates of the rectangle where the gradient should converge
+          # 24  numFillToRight   8  Right coordinate. Used for rectangular gradients to determine the coordinates of the rectangle where the gradient should converge
+          # 32  numFillToTop     8  Top coordinate. Used for rectangular gradients to determine the coordinates of the rectangle where the gradient should converge
+          # 40  numFillToBottom  8  Bottom coordinate. Used for rectangular gradients to determine the coordinates of the rectangle where the gradient should converge
+          # 48  cGradStops       4  The number of gradient stop definitions to follow. A valid gradient must have at least one gradient stop and no more than 256
+          # 52  rgGradStops      *  Array of gradient stops
+
+          type, num_degree, num_fill_to_left, num_fill_to_right, num_fill_to_top, num_fill_to_bottom, c_grad_stops = work.unpack("@#{offset + 4}NEEEEEL")
+          gradient_type_sym = detect_gradient_type(type)
+
+          result = {
+              type:   gradient_type_sym,
+              degree: num_degree
+          }
+
+          if gradient_type_sym == :rectangular
+            result = result.merge(
+              fill_to_left:   num_fill_to_left,
+              fill_to_right:  num_fill_to_right,
+              fill_to_top:    num_fill_to_top,
+              fill_to_bottom: num_fill_to_bottom
+            )
+          end
+
+          color_stops = []
+          c_grad_stops.times do |n|
+            grad_array_len = 22 * n
+            # 0   xclrType     2  Color type. See previous definition for Excel color types/values
+            # 2   xclrValue    4  Color value. See previous definition for Excel color types/values
+            # 6   numPosition  8  Position within the gradient range where this gradient stop‘s color should begin
+            # 14  numTint      8  Tint and shade value. Same as nTintShade but expressed as double. This value is used to represent how the color should be tinted or shaded. This value is ranges from (-1.0 to 1.0). Positive values make the color value lighter, negative values make the color value darker. A 0.0 value means do not tint/shade the color.
+            x_clr_type, x_clr_value, num_position, num_tint = work.unpack("@#{offset + 52 + grad_array_len}sNEE")
+            color_type_sym = XF_EXTENSION_COLOR_TYPES[x_clr_type]
+            color_stops << {
+                color_type: color_type_sym,
+                color: detect_color(x_clr_value, color_type_sym),
+                position: num_position,
+                tint: num_tint
+            }
+          end
+          result = result.merge(colors: color_stops)
+
+          xf.extension[type_key] = result
         else
           nil # not implemented yet
       end
@@ -1233,6 +1268,35 @@ class Reader
       offset += ext_len
     end
   end
+
+  def detect_gradient_type(val)
+    case val
+      when 0 then :linear
+      when 1 then :rectangular
+      else val
+    end
+  end
+
+  def detect_color(color_value, color_type_sym)
+    case color_type_sym
+      when :auto
+        'ffffff'
+      when :indexed, :themed
+        color_value
+      when :rgb
+        rgb_hex(color_value)
+      else
+        raise 'not_implemented'
+    end
+  end
+
+  def calculate_tint(tint_raw)
+    # This value is used to represent how the color should be tinted or shaded.
+    # This value is ranges from (-1.0 to 1.0). Positive values make the color value lighter,
+    # negative values make the color value darker. A 0.0 value means do not tint/shade the color.
+    tint_raw.to_f * (1.0 / (tint_raw < 0 ? 32768.0 : 32767.0)) # Scaling signed short to range of -1..1
+  end
+
   def read_palette work
     # Offset  Size  Contents
     #      0     2  Number of following colours (nm). Contains 16 in BIFF3-BIFF4 and 56 in BIFF5-BIFF8.
