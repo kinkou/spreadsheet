@@ -1258,7 +1258,7 @@ class Reader
                 tint: num_tint
             }
           end
-          result = result.merge(colors: color_stops)
+          result = result.merge(stops: color_stops)
 
           xf.extension[type_key] = result
         else
